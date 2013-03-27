@@ -3,17 +3,23 @@ package com.torcellite.imageComparator;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -25,13 +31,13 @@ public class MainActivity extends Activity {
 	MatOfKeyPoint keypoints, dupKeypoints;
 	MatOfDMatch matches;
 	TextView tv;
+	ImageView iv;
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
 		public void onManagerConnected(int status) {
 			switch (status) {
 			case LoaderCallbackInterface.SUCCESS: {
 				Log.i(TAG, "OpenCV loaded successfully");
-
 				compare();
 			}
 				break;
@@ -42,7 +48,6 @@ public class MainActivity extends Activity {
 			}
 		}
 	};
-
 	/*
 	 * Compares two images and states if they're duplicate or not. Keypoints are
 	 * detected and descriptors are extracted and compared. The algorithm - If
@@ -51,8 +56,12 @@ public class MainActivity extends Activity {
 	 * welcome to change the algorithm.
 	 */
 	void compare() {
-		img1 = Highgui.imread("mnt/sdcard/img1.jpg");
-		img2 = Highgui.imread("mnt/sdcard/img2.jpg");
+		try{
+		OpenCVLoader.initDebug();
+		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_4, this,
+				mLoaderCallback);	
+		img1 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130323-WA0003.jpg", 1);
+		img2 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130323-WA0001.jpg", 11);
 		detector = FeatureDetector.create(FeatureDetector.FAST);
 		SurfExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
 		matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
@@ -63,6 +72,7 @@ public class MainActivity extends Activity {
 		dupDescriptors = new Mat();
 		matches = new MatOfDMatch();
 		detector.detect(img1, keypoints);
+		Mat img3=new Mat();
 		Log.d("LOG!", "number of query Keypoints= " + keypoints.size());
 		detector.detect(img2, dupKeypoints);
 		Log.d("LOG!", "number of dup Keypoints= " + dupKeypoints.size());
@@ -91,19 +101,34 @@ public class MainActivity extends Activity {
 			if (((m - dd) / dd <= .15 && (m - d) / d <= .15)
 					&& (d - dd) / d <= 50) {
 				tv.setText("Duplicate image.");
+				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
+				Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
+				Utils.matToBitmap(img3, bmp);
+				iv.setImageBitmap(bmp);
 			} else
 				tv.setText("Not duplicate images.");
 		} else {
 			if (((m - dd) / dd <= .15 && (m - d) / d <= .15)
 					&& (d - dd) / dd <= 50) {
 				tv.setText("Duplicate image.");
+				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
+				Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
+				Utils.matToBitmap(img3, bmp);
+				iv.setImageBitmap(bmp);
 			} else
 				tv.setText("Not duplicate images.");
+		}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e);
+			tv.setText(e.toString());
 		}
 	}
 
 	public MainActivity() {
 		Log.i(TAG, "Instantiated new " + this.getClass());
+		
 	}
 
 	/** Called when the activity is first created. */
@@ -111,9 +136,9 @@ public class MainActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(TAG, "called onCreate");
 		super.onCreate(savedInstanceState);
-
 		setContentView(R.layout.activity_main);
 		tv = (TextView) findViewById(R.id.tv);
+		iv = (ImageView) findViewById(R.id.imageView1);
 	}
 
 	@Override
