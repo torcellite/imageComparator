@@ -60,8 +60,8 @@ public class MainActivity extends Activity {
 		OpenCVLoader.initDebug();
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_4, this,
 				mLoaderCallback);	
-		img1 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130323-WA0003.jpg", 1);
-		img2 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130323-WA0001.jpg", 11);
+		img1 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/mnt/sdcard");//img1's path
+		img2 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/mnt/sdcard");//img2's path
 		detector = FeatureDetector.create(FeatureDetector.FAST);
 		SurfExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
 		matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
