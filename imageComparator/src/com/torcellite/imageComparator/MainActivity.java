@@ -97,27 +97,16 @@ public class MainActivity extends Activity {
 		pos = M.indexOf('x');
 		m = Integer.parseInt(M.substring(pos + 1));
 		System.out.println("dd=" + dd + "d=" + d + "m=" + m);
-		if (d > dd) {
-			if (((m - dd)<= 500 && (m - d) <=500)
-					&& (d - dd) <= 500) {
-				tv.setText("Duplicate image.");
-				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
-				Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
-				Utils.matToBitmap(img3, bmp);
-				iv.setImageBitmap(bmp);
-			} else
+		if((Math.abs(d-dd)<=500)&&(Math.abs(m-dd)<=500)&&(Math.abs(d-m)<=500))
+		{
+			tv.setText("Duplicate image.");
+			Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
+			Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
+			Utils.matToBitmap(img3, bmp);
+			iv.setImageBitmap(bmp);
+	   }
+		else
 				tv.setText("Not duplicate images.");
-		} else {
-			if (((m - dd)<= 500 && (m - d) <=500)
-					&& (dd - d) <= 500) {
-				tv.setText("Duplicate image.");
-				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
-				Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
-				Utils.matToBitmap(img3, bmp);
-				iv.setImageBitmap(bmp);
-			} else
-				tv.setText("Not duplicate images.");
-		}
 		}
 		catch(Exception e)
 		{
