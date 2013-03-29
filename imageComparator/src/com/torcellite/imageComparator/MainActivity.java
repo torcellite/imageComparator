@@ -98,8 +98,8 @@ public class MainActivity extends Activity {
 		m = Integer.parseInt(M.substring(pos + 1));
 		System.out.println("dd=" + dd + "d=" + d + "m=" + m);
 		if (d > dd) {
-			if (((m - dd) / dd <= .15 && (m - d) / d <= .15)
-					&& (d - dd) / d <= 50) {
+			if (((m - dd)<= 500 && (m - d) <=500)
+					&& (d - dd) <= 500) {
 				tv.setText("Duplicate image.");
 				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
 				Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
@@ -108,8 +108,8 @@ public class MainActivity extends Activity {
 			} else
 				tv.setText("Not duplicate images.");
 		} else {
-			if (((m - dd) / dd <= .15 && (m - d) / d <= .15)
-					&& (d - dd) / dd <= 50) {
+			if (((m - dd)<= 500 && (m - d) <=500)
+					&& (dd - d) <= 500) {
 				tv.setText("Duplicate image.");
 				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches, img3);
 				Bitmap bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
