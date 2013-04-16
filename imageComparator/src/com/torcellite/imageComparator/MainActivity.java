@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
 	{
 		Mat img1, img2, descriptors, dupDescriptors;
 		FeatureDetector detector;
-		DescriptorExtractor SurfExtractor;
+		DescriptorExtractor ORBExtractor;
 		DescriptorMatcher matcher;
 		MatOfKeyPoint keypoints, dupKeypoints;
 		MatOfDMatch matches, matches_final_mat;
@@ -150,7 +150,7 @@ public class MainActivity extends Activity {
 			img1 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130108-WA0002.jpg");//img1's path
 			img2 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130103-WA0000.jpg");//img2's path
 			detector = FeatureDetector.create(FeatureDetector.FAST);
-			SurfExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+			ORBExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
 			matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 
 			keypoints = new MatOfKeyPoint();
@@ -163,8 +163,8 @@ public class MainActivity extends Activity {
 			detector.detect(img2, dupKeypoints);
 			Log.d("LOG!", "number of dup Keypoints= " + dupKeypoints.size());
 			// Descript keypoints
-			SurfExtractor.compute(img1, keypoints, descriptors);
-			SurfExtractor.compute(img2, dupKeypoints, dupDescriptors);
+			ORBExtractor.compute(img1, keypoints, descriptors);
+			ORBExtractor.compute(img2, dupKeypoints, dupDescriptors);
 			Log.d("LOG!", "number of descriptors= " + descriptors.size());
 			Log.d("LOG!", "number of dupDescriptors= " + dupDescriptors.size());
 			// matching descriptors
