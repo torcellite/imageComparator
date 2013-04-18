@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">imageComparator</string>
-    <string name="hello_world">Working..</string>
     <string name="menu_settings">Settings</string>
+    <string name="select">Select the two images to be compared</string>
+    <string name="start">Start processing</string>
 
 </resources>

@@ -1,5 +1,11 @@
 package com.torcellite.imageComparator;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,25 +21,40 @@ import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.Features2d;
-import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	private static final String TAG = "OCVSample::Activity";
-	Bitmap bmp;
-	ImageView iv;
-	String text="";
+	Bitmap bmp, yourSelectedImage, bmpimg1, bmpimg2;
+	ImageView iv1, iv2;
+	String path1, path2;
+	String text, selectedPath;
+	Button start;
+	int imgNo=0;
+	Uri selectedImage;
+    InputStream imageStream;
+    long startTime, endTime;
+	private static final int SELECT_PHOTO = 100;
 	/*
 	 * This is just a simple example program. No UI design. Just an OpenCV example.
 	 * Compares two images and states if they're duplicate or not. Keypoints are
@@ -45,7 +66,6 @@ public class MainActivity extends Activity {
 
 	public MainActivity() {
 		Log.i(TAG, "Instantiated new " + this.getClass());
-		
 	}
 
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -69,14 +89,88 @@ public class MainActivity extends Activity {
 		Log.i(TAG, "called onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		iv = (ImageView) MainActivity.this.findViewById(R.id.imageView1);
-		new Handler().postDelayed(new Runnable(){
-            @Override
-            public void run() {
-                /* Create an Intent that will start the Menu-Activity. */
-                new asyncTask().execute();
-            }
-        }, 2000);//Wait till OpenCV library is initialized
+		iv1 = (ImageView) MainActivity.this.findViewById(R.id.img1);
+		iv2 = (ImageView) MainActivity.this.findViewById(R.id.img2);
+		start = (Button) MainActivity.this.findViewById(R.id.button1);
+		iv1.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+				photoPickerIntent.setType("image/*");
+				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
+				imgNo=1;
+				
+			}
+		});
+		iv2.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+				photoPickerIntent.setType("image/*");
+				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
+				imgNo=2;
+			}
+		});
+		start.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				if(bmpimg1!=null&&bmpimg2!=null)
+				{
+					System.out.println(path1);
+					System.out.println(path2);
+					new asyncTask().execute();
+					startTime=System.currentTimeMillis();
+				}
+				else
+					Toast.makeText(MainActivity.this, "You haven't selected images.", Toast.LENGTH_LONG).show();
+			}
+		});
+		
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) { 
+	    super.onActivityResult(requestCode, resultCode, imageReturnedIntent); 
+
+	    switch(requestCode) { 
+	    case SELECT_PHOTO:
+	        if(resultCode == RESULT_OK){  
+	            selectedImage = imageReturnedIntent.getData();
+				try {
+					imageStream = getContentResolver().openInputStream(selectedImage);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+				if(imgNo==1)
+				{
+					iv1.setImageBitmap(yourSelectedImage);
+					path1=selectedImage.getPath();
+					bmpimg1=yourSelectedImage;
+					iv1.invalidate();
+				}
+				else if(imgNo==2)
+				{
+					iv2.setImageBitmap(yourSelectedImage);
+					path2=selectedImage.getPath();
+					bmpimg2=yourSelectedImage;
+					iv2.invalidate();
+				}
+	        }
+	    }
+	}
+	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
 	}
 	
 	@Override
@@ -84,6 +178,8 @@ public class MainActivity extends Activity {
 		super.onResume();
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_4, this,
 				mLoaderCallback);
+		iv1.refreshDrawableState();
+		iv2.refreshDrawableState();
 	}
 	
 	public class asyncTask extends AsyncTask<Void, Void, Void>
@@ -96,8 +192,9 @@ public class MainActivity extends Activity {
 		MatOfDMatch matches, matches_final_mat;
 		TextView tv;
 		ProgressDialog pd;
-		int m = 0, d = 0, dd = 0, pos = 0;
-		String M, D, DD;
+		boolean isDuplicate=false;
+		//int m = 0, d = 0, dd = 0, pos = 0;
+		//String M, D, DD;
 		@Override
 		protected void onPreExecute()
 		{
@@ -126,29 +223,77 @@ public class MainActivity extends Activity {
 				Imgproc.cvtColor(img3, img3, Imgproc.COLOR_BGR2RGB);
 				Utils.matToBitmap(img3, bmp);
 				List<DMatch> finalMatchesList = matches_final_mat.toList();
+				endTime=System.currentTimeMillis();
 				if(finalMatchesList.size()>500)//dev discretion for number of matches to be found for an image to be judged as duplicate
-					text=finalMatchesList.size()+" matches were found. Possible duplicate image.";
+				{
+					text=finalMatchesList.size()+" matches were found. Possible duplicate image.\nTime taken="+(endTime-startTime)+"ms";
+					isDuplicate=true;
+				}
 				else
-					text=finalMatchesList.size()+" matches were found. Images aren't similar.";
-				runOnUiThread(new Runnable() {
-		            public void run() { 
-
-		                    try {
-		                        Thread.sleep(25);
-		                    } catch (InterruptedException e) {
-		                        e.printStackTrace();
-		                    }
-		    				tv.setText(text);
-		    				iv.setImageBitmap(bmp);//set image in the UI thread
-		    				iv.invalidate();
-		            }
-		        });
+				{
+					text=finalMatchesList.size()+" matches were found. Images aren't similar.\nTime taken="+(endTime-startTime)+"ms";
+					isDuplicate=false;
+				}
 				pd.dismiss();
+				final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+				alertDialog.setTitle("Result");
+				LayoutInflater factory = LayoutInflater.from(MainActivity.this);
+				final View view = factory.inflate(R.layout.image_view, null);
+				ImageView matchedImages=(ImageView) view.findViewById(R.id.finalImage);
+				matchedImages.setImageBitmap(bmp);
+				matchedImages.invalidate();
+				final CheckBox shouldBeDuplicate=(CheckBox) view.findViewById(R.id.checkBox);
+				TextView message=(TextView) view.findViewById(R.id.message);
+				message.setText(text);
+				alertDialog.setView(view);
+				shouldBeDuplicate.setText("These images are actually duplicates.");
+				alertDialog.setPositiveButton("Add to logs", new DialogInterface.OnClickListener() {
+				   public void onClick(DialogInterface dialog, int which) {
+					   File logs=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt");
+					   FileWriter fw;
+					   BufferedWriter bw;
+					try {
+						fw = new FileWriter(logs, true);
+					    bw=new BufferedWriter(fw);
+					    bw.write(path1+" was compared to "+path2+"\n"+"Is actual duplicate: "+shouldBeDuplicate.isChecked()+"\nRecognized as duplicate: "+isDuplicate+"\n");
+						bw.close();
+						Toast.makeText(MainActivity.this, "Logs updated.\nLog location: "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt", Toast.LENGTH_LONG).show();
+					}
+					   catch (IOException e) {
+							// TODO Auto-generated catch block
+							//e.printStackTrace();
+							try {
+								File dir=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/");
+								dir.mkdirs();
+								logs.createNewFile();
+								logs= new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt");
+								fw = new FileWriter(logs, true);
+							    bw=new BufferedWriter(fw);
+							    bw.write(path1+" was compared to "+path2+"\n"+"Is actual duplicate: "+shouldBeDuplicate.isChecked()+"\nRecognized as duplciate: "+isDuplicate+"\n");
+								bw.close();
+								Toast.makeText(MainActivity.this, "Logs updated.\nLog location: "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt", Toast.LENGTH_LONG).show();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						
+						}
+				   }
+				});
+				alertDialog.show();
 		}
 		
 		void compare() {
-			img1 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130108-WA0002.jpg");//img1's path
-			img2 = Highgui.imread(Environment.getExternalStorageDirectory().getAbsolutePath()+"/WhatsApp/Media/WhatsApp Images/IMG-20130103-WA0000.jpg");//img2's path
+			try{
+			bmpimg1=bmpimg1.copy(Bitmap.Config.ARGB_8888, true);
+			bmpimg2=bmpimg2.copy(Bitmap.Config.ARGB_8888, true);
+			img1=new Mat();
+			img2=new Mat();
+			Utils.bitmapToMat(bmpimg1, img1);
+			Utils.bitmapToMat(bmpimg2, img2);
+			Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2RGB);
+			Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGR2RGB);
+			System.out.println(img1+" "+img2);
 			detector = FeatureDetector.create(FeatureDetector.FAST);
 			ORBExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
 			matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
@@ -183,6 +328,12 @@ public class MainActivity extends Activity {
 
 			matches_final_mat = new MatOfDMatch();
 			matches_final_mat.fromList(matches_final);
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			//-------old stuff--------
 			//Current method of finding if image is duplicate - very stupid. IMPROVEMENT NEEDED TO FIND BEST MATCHES!!!
 			/*D = descriptors.size().toString();
 			pos = D.indexOf('x');
