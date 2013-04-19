@@ -6,8 +6,9 @@
 
     <uses-sdk
         android:minSdkVersion="8"
-        android:targetSdkVersion="17" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+        android:targetSdkVersion="10" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -16,13 +17,22 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.torcellite.imageComparator.MainActivity"
+            android:alwaysRetainTaskState="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
             android:screenOrientation="landscape" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.torcellite.imageComparator.Settings"
+            android:alwaysRetainTaskState="true"
+            android:label="@string/title_activity_settings"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape" >
         </activity>
     </application>
 

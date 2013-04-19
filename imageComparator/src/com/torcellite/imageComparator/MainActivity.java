@@ -36,6 +36,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -50,19 +53,15 @@ public class MainActivity extends Activity {
 	String path1, path2;
 	String text, selectedPath;
 	Button start;
-	int imgNo=0;
+	int imgNo = 0;
 	Uri selectedImage;
-    InputStream imageStream;
-    long startTime, endTime;
+	InputStream imageStream;
+	long startTime, endTime;
 	private static final int SELECT_PHOTO = 100;
-	/*
-	 * This is just a simple example program. No UI design. Just an OpenCV example.
-	 * Compares two images and states if they're duplicate or not. Keypoints are
-	 * detected and descriptors are extracted and compared. The algorithm - If
-	 * the matches is 15% less than or equal to the duplicate descriptors or
-	 * actual descriptors, the images are recognized as duplicates. People are
-	 * welcome to change the algorithm.
-	 */
+
+	private int descriptor = DescriptorExtractor.ORB;
+	String descriptorType;
+	private int min_dist = 500;
 
 	public MainActivity() {
 		Log.i(TAG, "Instantiated new " + this.getClass());
@@ -83,6 +82,7 @@ public class MainActivity extends Activity {
 			}
 		}
 	};
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -92,259 +92,344 @@ public class MainActivity extends Activity {
 		iv1 = (ImageView) MainActivity.this.findViewById(R.id.img1);
 		iv2 = (ImageView) MainActivity.this.findViewById(R.id.img2);
 		start = (Button) MainActivity.this.findViewById(R.id.button1);
+		run();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.activity_main_menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_settings:
+			Intent call = new Intent(MainActivity.this, Settings.class);
+			call.putExtra("descriptor", descriptor);
+			call.putExtra("min_dist", min_dist);
+			call.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+			call.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+			startActivity(call);
+			break;
+		}
+		return true;
+	}
+
+	public void run() {
 		iv1.setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
 				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
 				photoPickerIntent.setType("image/*");
 				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
-				imgNo=1;
-				
+				imgNo = 1;
+
 			}
 		});
 		iv2.setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
 				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
 				photoPickerIntent.setType("image/*");
 				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
-				imgNo=2;
+				imgNo = 2;
 			}
 		});
 		start.setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
-				if(bmpimg1!=null&&bmpimg2!=null)
-				{
-					System.out.println(path1);
-					System.out.println(path2);
+				if (bmpimg1 != null && bmpimg2 != null) {
 					new asyncTask().execute();
-					startTime=System.currentTimeMillis();
-				}
-				else
-					Toast.makeText(MainActivity.this, "You haven't selected images.", Toast.LENGTH_LONG).show();
+					startTime = System.currentTimeMillis();
+					System.out.println(descriptor + " " + min_dist);
+				} else
+					Toast.makeText(MainActivity.this,
+							"You haven't selected images.", Toast.LENGTH_LONG)
+							.show();
 			}
 		});
-		
 	}
-	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) { 
-	    super.onActivityResult(requestCode, resultCode, imageReturnedIntent); 
 
-	    switch(requestCode) { 
-	    case SELECT_PHOTO:
-	        if(resultCode == RESULT_OK){  
-	            selectedImage = imageReturnedIntent.getData();
+	@Override
+	protected void onNewIntent(Intent newIntent) {
+		super.onNewIntent(newIntent);
+		min_dist = newIntent.getExtras().getInt("min_dist");
+		descriptor = newIntent.getExtras().getInt("descriptor");
+		run();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode,
+			Intent imageReturnedIntent) {
+		super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+
+		switch (requestCode) {
+		case SELECT_PHOTO:
+			if (resultCode == RESULT_OK) {
+				selectedImage = imageReturnedIntent.getData();
 				try {
-					imageStream = getContentResolver().openInputStream(selectedImage);
+					imageStream = getContentResolver().openInputStream(
+							selectedImage);
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				yourSelectedImage = BitmapFactory.decodeStream(imageStream);
-				if(imgNo==1)
-				{
+				if (imgNo == 1) {
 					iv1.setImageBitmap(yourSelectedImage);
-					path1=selectedImage.getPath();
-					bmpimg1=yourSelectedImage;
+					path1 = selectedImage.getPath();
+					bmpimg1 = yourSelectedImage;
 					iv1.invalidate();
-				}
-				else if(imgNo==2)
-				{
+				} else if (imgNo == 2) {
 					iv2.setImageBitmap(yourSelectedImage);
-					path2=selectedImage.getPath();
-					bmpimg2=yourSelectedImage;
+					path2 = selectedImage.getPath();
+					bmpimg2 = yourSelectedImage;
 					iv2.invalidate();
 				}
-	        }
-	    }
+			}
+		}
 	}
-	
+
 	@Override
-	public void onPause()
-	{
+	public void onPause() {
 		super.onPause();
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_4, this,
 				mLoaderCallback);
-		iv1.refreshDrawableState();
-		iv2.refreshDrawableState();
 	}
-	
-	public class asyncTask extends AsyncTask<Void, Void, Void>
-	{
+
+	public class asyncTask extends AsyncTask<Void, Void, Void> {
 		Mat img1, img2, descriptors, dupDescriptors;
 		FeatureDetector detector;
-		DescriptorExtractor ORBExtractor;
+		DescriptorExtractor DescExtractor;
 		DescriptorMatcher matcher;
 		MatOfKeyPoint keypoints, dupKeypoints;
 		MatOfDMatch matches, matches_final_mat;
 		TextView tv;
 		ProgressDialog pd;
-		boolean isDuplicate=false;
-		//int m = 0, d = 0, dd = 0, pos = 0;
-		//String M, D, DD;
+		boolean isDuplicate = false;
+
+		// int m = 0, d = 0, dd = 0, pos = 0;
+		// String M, D, DD;
 		@Override
-		protected void onPreExecute()
-		{
+		protected void onPreExecute() {
 			tv = (TextView) MainActivity.this.findViewById(R.id.tv);
 			pd = new ProgressDialog(MainActivity.this);
 			pd.setIndeterminate(true);
 			pd.setCancelable(true);
 			pd.setCanceledOnTouchOutside(false);
-			pd.setMessage("Processing");
+			pd.setMessage("Processing...");
 			pd.show();
 		}
-		
+
 		@Override
 		protected Void doInBackground(Void... arg0) {
 			// TODO Auto-generated method stub
 			compare();
 			return null;
 		}
-		
+
 		@Override
-		protected void onPostExecute(Void result)
-		{
-				Mat img3=new Mat();
-				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints, matches_final_mat, img3);
-				bmp = Bitmap.createBitmap(img3.cols(), img3.rows(), Bitmap.Config.ARGB_8888);
+		protected void onPostExecute(Void result) {
+			try {
+				Mat img3 = new Mat();
+				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints,
+						matches_final_mat, img3);
+				bmp = Bitmap.createBitmap(img3.cols(), img3.rows(),
+						Bitmap.Config.ARGB_8888);
 				Imgproc.cvtColor(img3, img3, Imgproc.COLOR_BGR2RGB);
 				Utils.matToBitmap(img3, bmp);
 				List<DMatch> finalMatchesList = matches_final_mat.toList();
-				endTime=System.currentTimeMillis();
-				if(finalMatchesList.size()>500)//dev discretion for number of matches to be found for an image to be judged as duplicate
+				endTime = System.currentTimeMillis();
+				if (finalMatchesList.size() > min_dist)// dev discretion for
+														// number of matches to
+														// be found for an image
+														// to be judged as
+														// duplicate
 				{
-					text=finalMatchesList.size()+" matches were found. Possible duplicate image.\nTime taken="+(endTime-startTime)+"ms";
-					isDuplicate=true;
-				}
-				else
-				{
-					text=finalMatchesList.size()+" matches were found. Images aren't similar.\nTime taken="+(endTime-startTime)+"ms";
-					isDuplicate=false;
+					text = finalMatchesList.size()
+							+ " matches were found. Possible duplicate image.\nTime taken="
+							+ (endTime - startTime) + "ms";
+					isDuplicate = true;
+				} else {
+					text = finalMatchesList.size()
+							+ " matches were found. Images aren't similar.\nTime taken="
+							+ (endTime - startTime) + "ms";
+					isDuplicate = false;
 				}
 				pd.dismiss();
-				final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+				if (descriptor == DescriptorExtractor.BRIEF)
+					descriptorType = "BRIEF";
+				if (descriptor == DescriptorExtractor.BRISK)
+					descriptorType = "BRISK";
+				if (descriptor == DescriptorExtractor.FREAK)
+					descriptorType = "FREAK";
+				if (descriptor == DescriptorExtractor.ORB)
+					descriptorType = "ORB";
+				if (descriptor == DescriptorExtractor.SIFT)
+					descriptorType = "SIFT";
+				else
+					descriptorType = "SURF";
+				final AlertDialog.Builder alertDialog = new AlertDialog.Builder(
+						MainActivity.this);
 				alertDialog.setTitle("Result");
+				alertDialog.setCancelable(false);
 				LayoutInflater factory = LayoutInflater.from(MainActivity.this);
 				final View view = factory.inflate(R.layout.image_view, null);
-				ImageView matchedImages=(ImageView) view.findViewById(R.id.finalImage);
+				ImageView matchedImages = (ImageView) view
+						.findViewById(R.id.finalImage);
 				matchedImages.setImageBitmap(bmp);
 				matchedImages.invalidate();
-				final CheckBox shouldBeDuplicate=(CheckBox) view.findViewById(R.id.checkBox);
-				TextView message=(TextView) view.findViewById(R.id.message);
+				final CheckBox shouldBeDuplicate = (CheckBox) view
+						.findViewById(R.id.checkBox);
+				TextView message = (TextView) view.findViewById(R.id.message);
 				message.setText(text);
 				alertDialog.setView(view);
-				shouldBeDuplicate.setText("These images are actually duplicates.");
-				alertDialog.setPositiveButton("Add to logs", new DialogInterface.OnClickListener() {
-				   public void onClick(DialogInterface dialog, int which) {
-					   File logs=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt");
-					   FileWriter fw;
-					   BufferedWriter bw;
-					try {
-						fw = new FileWriter(logs, true);
-					    bw=new BufferedWriter(fw);
-					    bw.write(path1+" was compared to "+path2+"\n"+"Is actual duplicate: "+shouldBeDuplicate.isChecked()+"\nRecognized as duplicate: "+isDuplicate+"\n");
-						bw.close();
-						Toast.makeText(MainActivity.this, "Logs updated.\nLog location: "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt", Toast.LENGTH_LONG).show();
-					}
-					   catch (IOException e) {
-							// TODO Auto-generated catch block
-							//e.printStackTrace();
-							try {
-								File dir=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/");
-								dir.mkdirs();
-								logs.createNewFile();
-								logs= new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt");
-								fw = new FileWriter(logs, true);
-							    bw=new BufferedWriter(fw);
-							    bw.write(path1+" was compared to "+path2+"\n"+"Is actual duplicate: "+shouldBeDuplicate.isChecked()+"\nRecognized as duplciate: "+isDuplicate+"\n");
-								bw.close();
-								Toast.makeText(MainActivity.this, "Logs updated.\nLog location: "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/imageComparator/Data Logs.txt", Toast.LENGTH_LONG).show();
-							} catch (IOException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
+				shouldBeDuplicate
+						.setText("These images are actually duplicates.");
+				alertDialog.setPositiveButton("Add to logs",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,
+									int which) {
+								File logs = new File(Environment
+										.getExternalStorageDirectory()
+										.getAbsolutePath()
+										+ "/imageComparator/Data Logs.txt");
+								FileWriter fw;
+								BufferedWriter bw;
+								try {
+									fw = new FileWriter(logs, true);
+									bw = new BufferedWriter(fw);
+									bw.write("Algorithm used:"
+											+ descriptor
+											+ "\nMinimum distance between keypoints: "
+											+ min_dist + "\n" + path1
+											+ " was compared to " + path2
+											+ "\n" + "Is actual duplicate: "
+											+ shouldBeDuplicate.isChecked()
+											+ "\nRecognized as duplciate: "
+											+ isDuplicate + "\n");
+									bw.close();
+									Toast.makeText(
+											MainActivity.this,
+											"Logs updated.\nLog location: "
+													+ Environment
+															.getExternalStorageDirectory()
+															.getAbsolutePath()
+													+ "/imageComparator/Data Logs.txt",
+											Toast.LENGTH_LONG).show();
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									// e.printStackTrace();
+									try {
+										File dir = new File(Environment
+												.getExternalStorageDirectory()
+												.getAbsolutePath()
+												+ "/imageComparator/");
+										dir.mkdirs();
+										logs.createNewFile();
+										logs = new File(
+												Environment
+														.getExternalStorageDirectory()
+														.getAbsolutePath()
+														+ "/imageComparator/Data Logs.txt");
+										fw = new FileWriter(logs, true);
+										bw = new BufferedWriter(fw);
+										bw.write("Algorithm used:"
+												+ descriptor
+												+ "\nMinimum distance between keypoints: "
+												+ min_dist + "\n" + path1
+												+ " was compared to " + path2
+												+ "\n"
+												+ "Is actual duplicate: "
+												+ shouldBeDuplicate.isChecked()
+												+ "\nRecognized as duplciate: "
+												+ isDuplicate + "\n");
+										bw.close();
+										Toast.makeText(
+												MainActivity.this,
+												"Logs updated.\nLog location: "
+														+ Environment
+																.getExternalStorageDirectory()
+																.getAbsolutePath()
+														+ "/imageComparator/Data Logs.txt",
+												Toast.LENGTH_LONG).show();
+									} catch (IOException e1) {
+										// TODO Auto-generated catch block
+										e1.printStackTrace();
+									}
+
+								}
 							}
-						
-						}
-				   }
-				});
+						});
 				alertDialog.show();
+			} catch (Exception e) {
+				e.printStackTrace();
+				Toast.makeText(MainActivity.this, e.toString(),
+						Toast.LENGTH_LONG).show();
+			}
 		}
-		
+
 		void compare() {
-			try{
-			bmpimg1=bmpimg1.copy(Bitmap.Config.ARGB_8888, true);
-			bmpimg2=bmpimg2.copy(Bitmap.Config.ARGB_8888, true);
-			img1=new Mat();
-			img2=new Mat();
-			Utils.bitmapToMat(bmpimg1, img1);
-			Utils.bitmapToMat(bmpimg2, img2);
-			Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2RGB);
-			Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGR2RGB);
-			System.out.println(img1+" "+img2);
-			detector = FeatureDetector.create(FeatureDetector.FAST);
-			ORBExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
-			matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+			try {
+				bmpimg1 = bmpimg1.copy(Bitmap.Config.ARGB_8888, true);
+				bmpimg2 = bmpimg2.copy(Bitmap.Config.ARGB_8888, true);
+				img1 = new Mat();
+				img2 = new Mat();
+				Utils.bitmapToMat(bmpimg1, img1);
+				Utils.bitmapToMat(bmpimg2, img2);
+				Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2RGB);
+				Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGR2RGB);
+				detector = FeatureDetector.create(FeatureDetector.FAST);
+				DescExtractor = DescriptorExtractor.create(descriptor);
+				matcher = DescriptorMatcher
+						.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 
-			keypoints = new MatOfKeyPoint();
-			dupKeypoints = new MatOfKeyPoint();
-			descriptors = new Mat();
-			dupDescriptors = new Mat();
-			matches = new MatOfDMatch();
-			detector.detect(img1, keypoints);
-			Log.d("LOG!", "number of query Keypoints= " + keypoints.size());
-			detector.detect(img2, dupKeypoints);
-			Log.d("LOG!", "number of dup Keypoints= " + dupKeypoints.size());
-			// Descript keypoints
-			ORBExtractor.compute(img1, keypoints, descriptors);
-			ORBExtractor.compute(img2, dupKeypoints, dupDescriptors);
-			Log.d("LOG!", "number of descriptors= " + descriptors.size());
-			Log.d("LOG!", "number of dupDescriptors= " + dupDescriptors.size());
-			// matching descriptors
-			matcher.match(descriptors, dupDescriptors, matches);
-			Log.d("LOG!", "Matches Size " + matches.size());
-			//New method of finding best matches
-			int DIST_LIMIT = 30;//minimum
-			List<DMatch> matchesList = matches.toList();
-			List<DMatch> matches_final= new ArrayList<DMatch>();
-			for(int i=0; i<matchesList.size(); i++)
-			{
-			   if(matchesList .get(i).distance <= DIST_LIMIT){
-			       matches_final.add(matches.toList().get(i));
-			   }
-			}
+				keypoints = new MatOfKeyPoint();
+				dupKeypoints = new MatOfKeyPoint();
+				descriptors = new Mat();
+				dupDescriptors = new Mat();
+				matches = new MatOfDMatch();
+				detector.detect(img1, keypoints);
+				Log.d("LOG!", "number of query Keypoints= " + keypoints.size());
+				detector.detect(img2, dupKeypoints);
+				Log.d("LOG!", "number of dup Keypoints= " + dupKeypoints.size());
+				// Descript keypoints
+				DescExtractor.compute(img1, keypoints, descriptors);
+				DescExtractor.compute(img2, dupKeypoints, dupDescriptors);
+				Log.d("LOG!", "number of descriptors= " + descriptors.size());
+				Log.d("LOG!",
+						"number of dupDescriptors= " + dupDescriptors.size());
+				// matching descriptors
+				matcher.match(descriptors, dupDescriptors, matches);
+				Log.d("LOG!", "Matches Size " + matches.size());
+				// New method of finding best matches
+				int DIST_LIMIT = 30;// minimum
+				List<DMatch> matchesList = matches.toList();
+				List<DMatch> matches_final = new ArrayList<DMatch>();
+				for (int i = 0; i < matchesList.size(); i++) {
+					if (matchesList.get(i).distance <= DIST_LIMIT) {
+						matches_final.add(matches.toList().get(i));
+					}
+				}
 
-			matches_final_mat = new MatOfDMatch();
-			matches_final_mat.fromList(matches_final);
-			}
-			catch(Exception e)
-			{
+				matches_final_mat = new MatOfDMatch();
+				matches_final_mat.fromList(matches_final);
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			//-------old stuff--------
-			//Current method of finding if image is duplicate - very stupid. IMPROVEMENT NEEDED TO FIND BEST MATCHES!!!
-			/*D = descriptors.size().toString();
-			pos = D.indexOf('x');
-			d = Integer.parseInt(D.substring(pos + 1));
-			DD = dupDescriptors.size().toString();
-			pos = DD.indexOf('x');
-			dd = Integer.parseInt(DD.substring(pos + 1));
-			M = matches.size().toString();
-			pos = M.indexOf('x');
-			m = Integer.parseInt(M.substring(pos + 1));
-			System.out.println("dd=" + dd + "d=" + d + "m=" + m);*/
 
 		}
 	}

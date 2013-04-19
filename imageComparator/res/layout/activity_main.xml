@@ -1,5 +1,4 @@
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,43 +8,44 @@
         android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
         android:layout_margin="5dp"
         android:text="@string/select" />
-	<ImageView
-   	    android:id="@+id/img1"
-   	    android:layout_width="wrap_content"
-   	    android:layout_height="wrap_content"
-   	    android:layout_toLeftOf="@+id/emptyLayout"
-   	    android:layout_above="@+id/button1"
-   	    android:layout_below="@+id/tv"
-   	    android:layout_margin="5dp"
-	
-   	    android:src="@drawable/img"/>
-   	<LinearLayout
-   	    android:id="@+id/emptyLayout"
-   	    android:layout_centerHorizontal="true"
-   	    android:layout_height="0dp"
-   	    android:layout_width="0dp"/>
-   	<ImageView
-   	    android:id="@+id/img2"
-   	    android:layout_width="wrap_content"
-   	    android:layout_height="wrap_content"
-   	    android:layout_centerHorizontal="true"
-   	    android:layout_toRightOf="@+id/emptyLayout"
-   	    android:layout_below="@+id/tv"
-   	    android:layout_above="@+id/button1"
-   	    android:layout_margin="5dp"
 
-   	    android:src="@drawable/img"/>
+    <ImageView
+        android:id="@+id/img1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button1"
+        android:layout_below="@+id/tv"
+        android:layout_margin="5dp"
+        android:layout_toLeftOf="@+id/emptyLayout"
+        android:src="@drawable/img" />
 
-   	<Button
-   	    android:id="@+id/button1"
-   	    android:layout_width="wrap_content"
-   	    android:layout_height="wrap_content"
-   	    android:layout_alignParentBottom="true"
-   	    android:layout_centerHorizontal="true"
-   	    android:text="@string/start" />
+    <LinearLayout
+        android:id="@+id/emptyLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:id="@+id/img2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button1"
+        android:layout_below="@+id/tv"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="5dp"
+        android:layout_toRightOf="@+id/emptyLayout"
+        android:src="@drawable/img" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/start" />
 
 </RelativeLayout>
