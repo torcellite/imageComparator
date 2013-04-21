@@ -50,6 +50,7 @@ public class MainActivity extends Activity {
 	private static final String TAG = "OCVSample::Activity";
 	Bitmap bmp, yourSelectedImage, bmpimg1, bmpimg2;
 	ImageView iv1, iv2;
+	TextView tv;
 	String path1, path2;
 	String text, selectedPath;
 	Button start;
@@ -92,6 +93,7 @@ public class MainActivity extends Activity {
 		iv1 = (ImageView) MainActivity.this.findViewById(R.id.img1);
 		iv2 = (ImageView) MainActivity.this.findViewById(R.id.img2);
 		start = (Button) MainActivity.this.findViewById(R.id.button1);
+		tv = (TextView) MainActivity.this.findViewById(R.id.tv);
 		run();
 	}
 
@@ -118,6 +120,20 @@ public class MainActivity extends Activity {
 	}
 
 	public void run() {
+		if (descriptor == DescriptorExtractor.BRIEF)
+			descriptorType = "BRIEF";
+		else if (descriptor == DescriptorExtractor.BRISK)
+			descriptorType = "BRISK";
+		else if (descriptor == DescriptorExtractor.FREAK)
+			descriptorType = "FREAK";
+		else if (descriptor == DescriptorExtractor.ORB)
+			descriptorType = "ORB";
+		else if (descriptor == DescriptorExtractor.SIFT)
+			descriptorType = "SIFT";
+		else if(descriptor == DescriptorExtractor.SURF)
+			descriptorType = "SURF";
+		System.out.println(descriptorType);
+		tv.setText("Select the two images to be compared.\n"+"DescriptorExtractor:"+descriptorType+" Minimum distance between keypoints:"+min_dist);
 		iv1.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -270,18 +286,6 @@ public class MainActivity extends Activity {
 					isDuplicate = false;
 				}
 				pd.dismiss();
-				if (descriptor == DescriptorExtractor.BRIEF)
-					descriptorType = "BRIEF";
-				if (descriptor == DescriptorExtractor.BRISK)
-					descriptorType = "BRISK";
-				if (descriptor == DescriptorExtractor.FREAK)
-					descriptorType = "FREAK";
-				if (descriptor == DescriptorExtractor.ORB)
-					descriptorType = "ORB";
-				if (descriptor == DescriptorExtractor.SIFT)
-					descriptorType = "SIFT";
-				else
-					descriptorType = "SURF";
 				final AlertDialog.Builder alertDialog = new AlertDialog.Builder(
 						MainActivity.this);
 				alertDialog.setTitle("Result");
@@ -312,14 +316,14 @@ public class MainActivity extends Activity {
 								try {
 									fw = new FileWriter(logs, true);
 									bw = new BufferedWriter(fw);
-									bw.write("Algorithm used:"
-											+ descriptor
+									bw.write("Algorithm used: "
+											+ descriptorType
 											+ "\nMinimum distance between keypoints: "
 											+ min_dist + "\n" + path1
 											+ " was compared to " + path2
 											+ "\n" + "Is actual duplicate: "
 											+ shouldBeDuplicate.isChecked()
-											+ "\nRecognized as duplciate: "
+											+ "\nRecognized as duplicate: "
 											+ isDuplicate + "\n");
 									bw.close();
 									Toast.makeText(
@@ -347,15 +351,15 @@ public class MainActivity extends Activity {
 														+ "/imageComparator/Data Logs.txt");
 										fw = new FileWriter(logs, true);
 										bw = new BufferedWriter(fw);
-										bw.write("Algorithm used:"
-												+ descriptor
+										bw.write("Algorithm used: "
+												+ descriptorType
 												+ "\nMinimum distance between keypoints: "
 												+ min_dist + "\n" + path1
 												+ " was compared to " + path2
 												+ "\n"
 												+ "Is actual duplicate: "
 												+ shouldBeDuplicate.isChecked()
-												+ "\nRecognized as duplciate: "
+												+ "\nRecognized as duplicate: "
 												+ isDuplicate + "\n");
 										bw.close();
 										Toast.makeText(
@@ -392,7 +396,7 @@ public class MainActivity extends Activity {
 				Utils.bitmapToMat(bmpimg2, img2);
 				Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2RGB);
 				Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGR2RGB);
-				detector = FeatureDetector.create(FeatureDetector.FAST);
+				detector = FeatureDetector.create(FeatureDetector.DYNAMIC_FAST);
 				DescExtractor = DescriptorExtractor.create(descriptor);
 				matcher = DescriptorMatcher
 						.create(DescriptorMatcher.BRUTEFORCE_HAMMING);

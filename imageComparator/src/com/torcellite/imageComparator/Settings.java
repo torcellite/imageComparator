@@ -37,18 +37,18 @@ public class Settings extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				int descriptor, min_dist = 500;
+				int descriptor = 0, min_dist = 500;
 				if (brief.isChecked())
 					descriptor = DescriptorExtractor.BRIEF;
 				else if (brisk.isChecked())
 					descriptor = DescriptorExtractor.BRISK;
-				if (freak.isChecked())
+				else if (freak.isChecked())
 					descriptor = DescriptorExtractor.FREAK;
-				if (orb.isChecked())
+				else if (orb.isChecked())
 					descriptor = DescriptorExtractor.ORB;
-				if (sift.isChecked())
+				else if (sift.isChecked())
 					descriptor = DescriptorExtractor.SIFT;
-				else
+				else if(surf.isChecked())
 					descriptor = DescriptorExtractor.SURF;
 				try {
 					min_dist = Integer.parseInt(num.getText().toString());
@@ -97,18 +97,18 @@ public class Settings extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				int descriptor, min_dist = 500;
+				int descriptor = 0, min_dist = 500;
 				if (brief.isChecked())
 					descriptor = DescriptorExtractor.BRIEF;
 				else if (brisk.isChecked())
 					descriptor = DescriptorExtractor.BRISK;
-				if (freak.isChecked())
+				else if (freak.isChecked())
 					descriptor = DescriptorExtractor.FREAK;
-				if (orb.isChecked())
+				else if (orb.isChecked())
 					descriptor = DescriptorExtractor.ORB;
-				if (sift.isChecked())
+				else if (sift.isChecked())
 					descriptor = DescriptorExtractor.SIFT;
-				else
+				else if (surf.isChecked())
 					descriptor = DescriptorExtractor.SURF;
 				try {
 					min_dist = Integer.parseInt(num.getText().toString());

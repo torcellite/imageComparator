@@ -10,9 +10,14 @@ It is used in my application [WhatsAppDuplicateMediaRemover] (http://play.google
 
 # To be added/fixed
 
- [fix]Fatal Exception caused by onNewIntent in MainActivity has to be resolved
+ [FIX]Fatal signal 11 (SIGSEGV) at 0x00000000 (code=1), thread 654 (AsyncTask #1)
  
- [add]Graphing log files on a server
+      E/Trace(657): error opening trace file: No such file or directory (2)
+	  
+	  Caused due to SURF and SIFT DescriptorExtractors
+
+ 
+ [ADD]Graphing log files on a server
 
 # Screenshots
 
