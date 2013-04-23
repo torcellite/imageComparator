@@ -2,8 +2,6 @@
 
 Image comparator which computes similarity between images to detect duplicates on the Android platform. It uses the OpenCV manager and different algorithms to compare images and help you find an optimized method to detect duplicate images for your application.
 
-It is used in my application [WhatsAppDuplicateMediaRemover] (http://play.google.com/store/apps/details?id=com.torcellite.whatsappduplicatemediaremover)
-
 Image comparison is optimized with the following parameters:
 1. Minimum distance between keypoints described to be accepted as duplicates. The lower the minimum distance matches, the higher the chances of the images being duplicate.
 2. Different algorithms for varying speed and accuracy. ORB, BRIEF, BRISK and FREAK. Only [PYRAMID_FAST](http://computer-vision-talks.com/2011/01/comparison-of-the-opencvs-feature-detection-algorithms-2/) FeatureDetector is being used as of now to increase speed.
