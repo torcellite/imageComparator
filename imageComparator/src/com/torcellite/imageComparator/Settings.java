@@ -27,8 +27,6 @@ public class Settings extends Activity {
 		brisk = (RadioButton) findViewById(R.id.radio1);
 		freak = (RadioButton) findViewById(R.id.radio2);
 		orb = (RadioButton) findViewById(R.id.radio3);
-		sift = (RadioButton) findViewById(R.id.radio4);
-		surf = (RadioButton) findViewById(R.id.radio5);
 		apply = (Button) findViewById(R.id.button1);
 		num = (EditText) findViewById(R.id.editText1);
 		num.setText("500");
@@ -46,10 +44,6 @@ public class Settings extends Activity {
 					descriptor = DescriptorExtractor.FREAK;
 				else if (orb.isChecked())
 					descriptor = DescriptorExtractor.ORB;
-				else if (sift.isChecked())
-					descriptor = DescriptorExtractor.SIFT;
-				else if(surf.isChecked())
-					descriptor = DescriptorExtractor.SURF;
 				try {
 					min_dist = Integer.parseInt(num.getText().toString());
 				} catch (Exception e) {
@@ -73,12 +67,6 @@ public class Settings extends Activity {
 		int min_dist = newIntent.getExtras().getInt("min_dist");
 		num.setText(min_dist + "");
 		switch (descriptor) {
-		case 1:
-			sift.setChecked(true);
-			break;
-		case 2:
-			surf.setChecked(true);
-			break;
 		case 3:
 			orb.setChecked(true);
 			break;
@@ -106,10 +94,6 @@ public class Settings extends Activity {
 					descriptor = DescriptorExtractor.FREAK;
 				else if (orb.isChecked())
 					descriptor = DescriptorExtractor.ORB;
-				else if (sift.isChecked())
-					descriptor = DescriptorExtractor.SIFT;
-				else if (surf.isChecked())
-					descriptor = DescriptorExtractor.SURF;
 				try {
 					min_dist = Integer.parseInt(num.getText().toString());
 				} catch (Exception e) {

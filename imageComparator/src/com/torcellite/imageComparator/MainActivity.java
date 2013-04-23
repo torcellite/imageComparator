@@ -396,7 +396,7 @@ public class MainActivity extends Activity {
 				Utils.bitmapToMat(bmpimg2, img2);
 				Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2RGB);
 				Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGR2RGB);
-				detector = FeatureDetector.create(FeatureDetector.DYNAMIC_FAST);
+				detector = FeatureDetector.create(FeatureDetector.PYRAMID_FAST);
 				DescExtractor = DescriptorExtractor.create(descriptor);
 				matcher = DescriptorMatcher
 						.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
