@@ -14,8 +14,10 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Scalar;
 import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
@@ -48,21 +50,22 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	private static final String TAG = "OCVSample::Activity";
-	Bitmap bmp, yourSelectedImage, bmpimg1, bmpimg2;
-	ImageView iv1, iv2;
-	TextView tv;
-	String path1, path2;
-	String text, selectedPath;
-	Button start;
-	int imgNo = 0;
-	Uri selectedImage;
-	InputStream imageStream;
-	long startTime, endTime;
+	private static Bitmap bmp, yourSelectedImage, bmpimg1, bmpimg2;
+	private static ImageView iv1, iv2;
+	private static TextView tv;
+	private static String path1, path2;
+	private static String text;
+	private static Button start;
+	private static int imgNo = 0;
+	private static Uri selectedImage;
+	private static InputStream imageStream;
+	private static long startTime, endTime;
 	private static final int SELECT_PHOTO = 100;
 
-	private int descriptor = DescriptorExtractor.ORB;
-	String descriptorType;
-	private int min_dist = 500;
+	private static int descriptor = DescriptorExtractor.ORB;
+	private static String descriptorType;
+	private static int min_dist = 80;
+	private static int min_matches = 100;
 
 	public MainActivity() {
 		Log.i(TAG, "Instantiated new " + this.getClass());
@@ -111,6 +114,7 @@ public class MainActivity extends Activity {
 			Intent call = new Intent(MainActivity.this, Settings.class);
 			call.putExtra("descriptor", descriptor);
 			call.putExtra("min_dist", min_dist);
+			call.putExtra("min_matches", min_matches);
 			call.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 			call.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 			startActivity(call);
@@ -133,7 +137,7 @@ public class MainActivity extends Activity {
 		else if(descriptor == DescriptorExtractor.SURF)
 			descriptorType = "SURF";
 		System.out.println(descriptorType);
-		tv.setText("Select the two images to be compared.\n"+"DescriptorExtractor:"+descriptorType+" Minimum distance between keypoints:"+min_dist);
+		tv.setText("Select the two images to be compared.\n"+"DescriptorExtractor:"+descriptorType+"\nHamming distance between descriptors:"+min_dist+"\nMinimum number of good matches:"+min_matches);
 		iv1.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -163,7 +167,7 @@ public class MainActivity extends Activity {
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
 				if (bmpimg1 != null && bmpimg2 != null) {
-					new asyncTask().execute();
+					new asyncTask(MainActivity.this).execute();
 					startTime = System.currentTimeMillis();
 					System.out.println(descriptor + " " + min_dist);
 				} else
@@ -179,6 +183,7 @@ public class MainActivity extends Activity {
 		super.onNewIntent(newIntent);
 		min_dist = newIntent.getExtras().getInt("min_dist");
 		descriptor = newIntent.getExtras().getInt("descriptor");
+		min_matches = newIntent.getExtras().getInt("min_matches");
 		run();
 	}
 
@@ -226,23 +231,25 @@ public class MainActivity extends Activity {
 				mLoaderCallback);
 	}
 
-	public class asyncTask extends AsyncTask<Void, Void, Void> {
-		Mat img1, img2, descriptors, dupDescriptors;
-		FeatureDetector detector;
-		DescriptorExtractor DescExtractor;
-		DescriptorMatcher matcher;
-		MatOfKeyPoint keypoints, dupKeypoints;
-		MatOfDMatch matches, matches_final_mat;
-		TextView tv;
-		ProgressDialog pd;
-		boolean isDuplicate = false;
-
-		// int m = 0, d = 0, dd = 0, pos = 0;
-		// String M, D, DD;
+	public static class asyncTask extends AsyncTask<Void, Void, Void> {
+		private static Mat img1, img2, descriptors, dupDescriptors;
+		private static FeatureDetector detector;
+		private static DescriptorExtractor DescExtractor;
+		private static DescriptorMatcher matcher;
+		private static MatOfKeyPoint keypoints, dupKeypoints;
+		private static MatOfDMatch matches, matches_final_mat;
+		private static ProgressDialog pd;
+		private static boolean isDuplicate = false;
+		private MainActivity asyncTaskContext=null;
+		private static Scalar RED = new Scalar(255,0,0);
+		private static Scalar GREEN = new Scalar(0,255,0);
+		public asyncTask(MainActivity context)
+		{
+			asyncTaskContext=context;
+		}
 		@Override
 		protected void onPreExecute() {
-			tv = (TextView) MainActivity.this.findViewById(R.id.tv);
-			pd = new ProgressDialog(MainActivity.this);
+			pd = new ProgressDialog(asyncTaskContext);
 			pd.setIndeterminate(true);
 			pd.setCancelable(true);
 			pd.setCanceledOnTouchOutside(false);
@@ -261,15 +268,17 @@ public class MainActivity extends Activity {
 		protected void onPostExecute(Void result) {
 			try {
 				Mat img3 = new Mat();
+				MatOfByte drawnMatches = new MatOfByte();
 				Features2d.drawMatches(img1, keypoints, img2, dupKeypoints,
-						matches_final_mat, img3);
+						matches_final_mat, img3, GREEN, RED,  drawnMatches, Features2d.NOT_DRAW_SINGLE_POINTS);
 				bmp = Bitmap.createBitmap(img3.cols(), img3.rows(),
 						Bitmap.Config.ARGB_8888);
 				Imgproc.cvtColor(img3, img3, Imgproc.COLOR_BGR2RGB);
 				Utils.matToBitmap(img3, bmp);
 				List<DMatch> finalMatchesList = matches_final_mat.toList();
+				final int matchesFound=finalMatchesList.size();
 				endTime = System.currentTimeMillis();
-				if (finalMatchesList.size() > min_dist)// dev discretion for
+				if (finalMatchesList.size() > min_matches)// dev discretion for
 														// number of matches to
 														// be found for an image
 														// to be judged as
@@ -287,10 +296,10 @@ public class MainActivity extends Activity {
 				}
 				pd.dismiss();
 				final AlertDialog.Builder alertDialog = new AlertDialog.Builder(
-						MainActivity.this);
+						asyncTaskContext);
 				alertDialog.setTitle("Result");
 				alertDialog.setCancelable(false);
-				LayoutInflater factory = LayoutInflater.from(MainActivity.this);
+				LayoutInflater factory = LayoutInflater.from(asyncTaskContext);
 				final View view = factory.inflate(R.layout.image_view, null);
 				ImageView matchedImages = (ImageView) view
 						.findViewById(R.id.finalImage);
@@ -318,8 +327,9 @@ public class MainActivity extends Activity {
 									bw = new BufferedWriter(fw);
 									bw.write("Algorithm used: "
 											+ descriptorType
-											+ "\nMinimum distance between keypoints: "
-											+ min_dist + "\n" + path1
+											+ "\nHamming distance: "
+											+ min_dist + "\nMinimum good matches: "+min_matches
+											+"\nMatches found: "+matchesFound+"\nTime elapsed: "+(endTime-startTime)+"seconds\n"+ path1
 											+ " was compared to " + path2
 											+ "\n" + "Is actual duplicate: "
 											+ shouldBeDuplicate.isChecked()
@@ -327,7 +337,7 @@ public class MainActivity extends Activity {
 											+ isDuplicate + "\n");
 									bw.close();
 									Toast.makeText(
-											MainActivity.this,
+											asyncTaskContext,
 											"Logs updated.\nLog location: "
 													+ Environment
 															.getExternalStorageDirectory()
@@ -363,7 +373,7 @@ public class MainActivity extends Activity {
 												+ isDuplicate + "\n");
 										bw.close();
 										Toast.makeText(
-												MainActivity.this,
+												asyncTaskContext,
 												"Logs updated.\nLog location: "
 														+ Environment
 																.getExternalStorageDirectory()
@@ -381,7 +391,7 @@ public class MainActivity extends Activity {
 				alertDialog.show();
 			} catch (Exception e) {
 				e.printStackTrace();
-				Toast.makeText(MainActivity.this, e.toString(),
+				Toast.makeText(asyncTaskContext, e.toString(),
 						Toast.LENGTH_LONG).show();
 			}
 		}
@@ -420,11 +430,10 @@ public class MainActivity extends Activity {
 				matcher.match(descriptors, dupDescriptors, matches);
 				Log.d("LOG!", "Matches Size " + matches.size());
 				// New method of finding best matches
-				int DIST_LIMIT = 30;// minimum
 				List<DMatch> matchesList = matches.toList();
 				List<DMatch> matches_final = new ArrayList<DMatch>();
 				for (int i = 0; i < matchesList.size(); i++) {
-					if (matchesList.get(i).distance <= DIST_LIMIT) {
+					if (matchesList.get(i).distance <= min_dist) {
 						matches_final.add(matches.toList().get(i));
 					}
 				}

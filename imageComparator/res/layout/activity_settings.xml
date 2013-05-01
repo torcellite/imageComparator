@@ -61,10 +61,7 @@
         android:layout_alignLeft="@+id/textView1"
         android:layout_below="@+id/textView1"
         android:ems="10"
-        android:inputType="number" >
-
-        <requestFocus />
-    </EditText>
+        android:inputType="number" />
 
     <TextView
         android:id="@+id/textView1"
@@ -74,5 +71,23 @@
         android:layout_marginLeft="15dp"
         android:layout_toRightOf="@+id/scrollView1"
         android:text="@string/min_dist" />
+    
+       <EditText
+        android:id="@+id/editText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_below="@+id/textView2"
+        android:ems="10"
+        android:inputType="number" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editText1"
+        android:layout_marginLeft="15dp"
+        android:layout_toRightOf="@+id/scrollView1"
+        android:text="@string/min_dup" />
 
 </RelativeLayout>

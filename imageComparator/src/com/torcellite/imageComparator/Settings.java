@@ -13,11 +13,12 @@ import android.widget.RadioGroup;
 
 public class Settings extends Activity {
 
-	RadioGroup descTypes;
-	RadioButton brief, brisk, freak, orb, sift, surf;
-	Button apply;
-	EditText num;
-
+	@SuppressWarnings("unused")
+	private static RadioGroup descTypes;
+	private static RadioButton brief, brisk, freak, orb;
+	private static Button apply;
+	private static EditText DIST_LIMIT, MIN_MATCHES;
+	private static int descriptor, min_dist, min_matches;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -28,14 +29,16 @@ public class Settings extends Activity {
 		freak = (RadioButton) findViewById(R.id.radio2);
 		orb = (RadioButton) findViewById(R.id.radio3);
 		apply = (Button) findViewById(R.id.button1);
-		num = (EditText) findViewById(R.id.editText1);
-		num.setText("500");
+		DIST_LIMIT = (EditText) findViewById(R.id.editText1);
+		MIN_MATCHES = (EditText) findViewById(R.id.editText2);
+		MIN_MATCHES.setText("100");
+		DIST_LIMIT.setText("80");
 		apply.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				int descriptor = 0, min_dist = 500;
+				int descriptor = 0, min_dist = 80, min_matches=100;
 				if (brief.isChecked())
 					descriptor = DescriptorExtractor.BRIEF;
 				else if (brisk.isChecked())
@@ -45,7 +48,7 @@ public class Settings extends Activity {
 				else if (orb.isChecked())
 					descriptor = DescriptorExtractor.ORB;
 				try {
-					min_dist = Integer.parseInt(num.getText().toString());
+					min_dist = Integer.parseInt(DIST_LIMIT.getText().toString());
 				} catch (Exception e) {
 					e.printStackTrace();
 					min_dist = 500;
@@ -55,6 +58,7 @@ public class Settings extends Activity {
 				call.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 				call.putExtra("descriptor", descriptor);
 				call.putExtra("min_dist", min_dist);
+				call.putExtra("min_matches", min_matches);
 				startActivity(call);
 			}
 		});
@@ -63,9 +67,10 @@ public class Settings extends Activity {
 	@Override
 	protected void onNewIntent(Intent newIntent) {
 		super.onNewIntent(newIntent);
-		int descriptor = newIntent.getExtras().getInt("descriptor");
-		int min_dist = newIntent.getExtras().getInt("min_dist");
-		num.setText(min_dist + "");
+		descriptor = newIntent.getExtras().getInt("descriptor");
+		min_dist = newIntent.getExtras().getInt("min_dist");
+		min_matches = newIntent.getExtras().getInt("min_matches");
+		DIST_LIMIT.setText(min_dist + "");
 		switch (descriptor) {
 		case 3:
 			orb.setChecked(true);
@@ -85,7 +90,6 @@ public class Settings extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				int descriptor = 0, min_dist = 500;
 				if (brief.isChecked())
 					descriptor = DescriptorExtractor.BRIEF;
 				else if (brisk.isChecked())
@@ -95,15 +99,18 @@ public class Settings extends Activity {
 				else if (orb.isChecked())
 					descriptor = DescriptorExtractor.ORB;
 				try {
-					min_dist = Integer.parseInt(num.getText().toString());
+					min_dist = Integer.parseInt(DIST_LIMIT.getText().toString());
+					min_matches = Integer.parseInt(MIN_MATCHES.getText().toString());
 				} catch (Exception e) {
 					e.printStackTrace();
-					min_dist = 500;
+					min_dist = 80;
+					min_matches=100;
 				}
 				Intent call = new Intent(Settings.this, MainActivity.class);
 				call.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 				call.putExtra("descriptor", descriptor);
 				call.putExtra("min_dist", min_dist);
+				call.putExtra("min_matches", min_matches);
 				startActivity(call);
 			}
 		});

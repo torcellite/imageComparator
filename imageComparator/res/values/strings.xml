@@ -13,6 +13,7 @@
     <string name="surf">SURF</string>
     <string name="sift">SIFT</string>
     <string name="Apply">Apply Settings</string>
-    <string name="min_dist">Minimum distance between keypoints</string>
+    <string name="min_dist">Hamming distance between matched descriptors(Lower the more similar):</string>
+    <string name="min_dup">Minimum number of good matches to be recognized as a duplicate:</string>
 
 </resources>

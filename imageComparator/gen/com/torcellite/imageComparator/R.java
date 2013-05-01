@@ -55,15 +55,16 @@ containing a value of this type.
         public static final int any=0x7f040000;
         public static final int back=0x7f040001;
         public static final int button1=0x7f040005;
-        public static final int checkBox=0x7f040011;
+        public static final int checkBox=0x7f040013;
         public static final int editText1=0x7f04000e;
+        public static final int editText2=0x7f040010;
         public static final int emptyLayout=0x7f040006;
-        public static final int finalImage=0x7f040012;
+        public static final int finalImage=0x7f040014;
         public static final int front=0x7f040002;
         public static final int img1=0x7f040004;
         public static final int img2=0x7f040007;
-        public static final int menu_settings=0x7f040013;
-        public static final int message=0x7f040010;
+        public static final int menu_settings=0x7f040015;
+        public static final int message=0x7f040012;
         public static final int radio0=0x7f04000a;
         public static final int radio1=0x7f04000b;
         public static final int radio2=0x7f04000c;
@@ -71,6 +72,7 @@ containing a value of this type.
         public static final int radioGroup1=0x7f040009;
         public static final int scrollView1=0x7f040008;
         public static final int textView1=0x7f04000f;
+        public static final int textView2=0x7f040011;
         public static final int tv=0x7f040003;
     }
     public static final class layout {
@@ -89,6 +91,7 @@ containing a value of this type.
         public static final int freak=0x7f060006;
         public static final int menu_settings=0x7f060001;
         public static final int min_dist=0x7f06000c;
+        public static final int min_dup=0x7f06000d;
         public static final int orb=0x7f060005;
         public static final int select=0x7f060002;
         public static final int sift=0x7f06000a;
