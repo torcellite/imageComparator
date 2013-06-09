@@ -13,9 +13,13 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.DMatch;
@@ -167,9 +171,54 @@ public class MainActivity extends Activity {
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
 				if (bmpimg1 != null && bmpimg2 != null) {
-					new asyncTask(MainActivity.this).execute();
+					/*if(bmpimg1.getWidth()!=bmpimg2.getWidth()){
+						bmpimg2 = Bitmap.createScaledBitmap(bmpimg2, bmpimg1.getWidth(), bmpimg1.getHeight(), true);
+					}*/
+					bmpimg1 = Bitmap.createScaledBitmap(bmpimg1, 100, 100, true);
+					bmpimg2 = Bitmap.createScaledBitmap(bmpimg2, 100, 100, true);
+					Mat img1 = new Mat();
+					Utils.bitmapToMat(bmpimg1, img1);
+			        Mat img2 = new Mat();
+			        Utils.bitmapToMat(bmpimg2, img2);
+			        Imgproc.cvtColor(img1, img1, Imgproc.COLOR_RGBA2GRAY); 
+			        Imgproc.cvtColor(img2, img2, Imgproc.COLOR_RGBA2GRAY); 
+			        img1.convertTo(img1, CvType.CV_32F);
+			        img2.convertTo(img2, CvType.CV_32F);
+			        Log.d("ImageComparator", "img1:"+img1.rows()+"x"+img1.cols()+" img2:"+img2.rows()+"x"+img2.cols());
+			        Mat hist1 = new Mat();
+			        Mat hist2 = new Mat();
+			        MatOfInt histSize = new MatOfInt(180);
+			        MatOfInt channels = new MatOfInt(0);
+			        ArrayList<Mat> bgr_planes1= new ArrayList<Mat>();
+			        ArrayList<Mat> bgr_planes2= new ArrayList<Mat>();
+			        Core.split(img1, bgr_planes1);
+			        Core.split(img2, bgr_planes2);
+			        MatOfFloat histRanges = new MatOfFloat (0f, 180f);		        
+			        boolean accumulate = false;
+			        Imgproc.calcHist(bgr_planes1, channels, new Mat(), hist1, histSize, histRanges, accumulate);
+			        Imgproc.calcHist(bgr_planes2, channels, new Mat(), hist1, histSize, histRanges, accumulate);
+			        try{
+			        	Mat dst=new Mat();
+			        	Core.compare(img1, img2, dst, Core.CMP_EQ);
+			        	Log.d("ImageComparator", Core.countNonZero(dst)+"/"+dst.size());
+			        	img1.convertTo(img1, CvType.CV_8U);
+				        img2.convertTo(img2, CvType.CV_8U);
+			        	double l2_norm = Core.norm(img1, img2, Core.NORM_INF);
+				        Log.d("ImageComparator", "l2_norm="+l2_norm);
+				        img1.convertTo(img1, CvType.CV_32F);
+				        img2.convertTo(img2, CvType.CV_32F);
+				        hist1.convertTo(hist1, CvType.CV_32F);
+				        hist2.convertTo(hist2, CvType.CV_32F);
+			        	double compare= Imgproc.compareHist(hist1, hist2, Imgproc.CV_COMP_BHATTACHARYYA);
+			        	Log.d("ImageComparator", "compare="+compare);
+			        	/*int noOfSimilarPixels=Core.countNonZero(dst);*/
+			        }
+			        catch(Exception e) {
+			        	Log.e("ImageComparator", "Exception outer");
+			        	
+			        }
+			        	new asyncTask(MainActivity.this).execute();	
 					startTime = System.currentTimeMillis();
-					System.out.println(descriptor + " " + min_dist);
 				} else
 					Toast.makeText(MainActivity.this,
 							"You haven't selected images.", Toast.LENGTH_LONG)
@@ -230,7 +279,7 @@ public class MainActivity extends Activity {
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_4, this,
 				mLoaderCallback);
 	}
-
+	
 	public static class asyncTask extends AsyncTask<Void, Void, Void> {
 		private static Mat img1, img2, descriptors, dupDescriptors;
 		private static FeatureDetector detector;
