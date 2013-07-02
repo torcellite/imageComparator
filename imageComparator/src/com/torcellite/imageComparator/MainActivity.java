@@ -66,10 +66,10 @@ public class MainActivity extends Activity {
 	private static long startTime, endTime;
 	private static final int SELECT_PHOTO = 100;
 
-	private static int descriptor = DescriptorExtractor.ORB;
+	private static int descriptor = DescriptorExtractor.BRISK;
 	private static String descriptorType;
-	private static int min_dist = 80;
-	private static int min_matches = 100;
+	private static int min_dist = 10;
+	private static int min_matches = 750;
 
 	public MainActivity() {
 		Log.i(TAG, "Instantiated new " + this.getClass());
@@ -180,44 +180,40 @@ public class MainActivity extends Activity {
 					Utils.bitmapToMat(bmpimg1, img1);
 			        Mat img2 = new Mat();
 			        Utils.bitmapToMat(bmpimg2, img2);
-			        Imgproc.cvtColor(img1, img1, Imgproc.COLOR_RGBA2GRAY); 
-			        Imgproc.cvtColor(img2, img2, Imgproc.COLOR_RGBA2GRAY); 
+			        //Imgproc.cvtColor(img1, img1, Imgproc.COLOR_RGBA2GRAY); 
+			        //Imgproc.cvtColor(img2, img2, Imgproc.COLOR_RGBA2GRAY); 
 			        img1.convertTo(img1, CvType.CV_32F);
 			        img2.convertTo(img2, CvType.CV_32F);
 			        Log.d("ImageComparator", "img1:"+img1.rows()+"x"+img1.cols()+" img2:"+img2.rows()+"x"+img2.cols());
 			        Mat hist1 = new Mat();
 			        Mat hist2 = new Mat();
-			        MatOfInt histSize = new MatOfInt(180);
+			        MatOfInt histSize = new MatOfInt(255);
 			        MatOfInt channels = new MatOfInt(0);
 			        ArrayList<Mat> bgr_planes1= new ArrayList<Mat>();
 			        ArrayList<Mat> bgr_planes2= new ArrayList<Mat>();
 			        Core.split(img1, bgr_planes1);
 			        Core.split(img2, bgr_planes2);
-			        MatOfFloat histRanges = new MatOfFloat (0f, 180f);		        
+			        MatOfFloat histRanges = new MatOfFloat (0f, 255f);		        
 			        boolean accumulate = false;
 			        Imgproc.calcHist(bgr_planes1, channels, new Mat(), hist1, histSize, histRanges, accumulate);
-			        Imgproc.calcHist(bgr_planes2, channels, new Mat(), hist1, histSize, histRanges, accumulate);
-			        try{
-			        	Mat dst=new Mat();
-			        	Core.compare(img1, img2, dst, Core.CMP_EQ);
-			        	Log.d("ImageComparator", Core.countNonZero(dst)+"/"+dst.size());
-			        	img1.convertTo(img1, CvType.CV_8U);
-				        img2.convertTo(img2, CvType.CV_8U);
-			        	double l2_norm = Core.norm(img1, img2, Core.NORM_INF);
-				        Log.d("ImageComparator", "l2_norm="+l2_norm);
+		        	Core.normalize(hist1, hist1, 0, hist1.rows(), Core.NORM_MINMAX, -1, new Mat());
+			        Imgproc.calcHist(bgr_planes2, channels, new Mat(), hist2, histSize, histRanges, accumulate);
+		        	Core.normalize(hist2, hist2, 0, hist2.rows(), Core.NORM_MINMAX, -1, new Mat());
 				        img1.convertTo(img1, CvType.CV_32F);
 				        img2.convertTo(img2, CvType.CV_32F);
 				        hist1.convertTo(hist1, CvType.CV_32F);
 				        hist2.convertTo(hist2, CvType.CV_32F);
-			        	double compare= Imgproc.compareHist(hist1, hist2, Imgproc.CV_COMP_BHATTACHARYYA);
-			        	Log.d("ImageComparator", "compare="+compare);
-			        	/*int noOfSimilarPixels=Core.countNonZero(dst);*/
-			        }
-			        catch(Exception e) {
-			        	Log.e("ImageComparator", "Exception outer");
-			        	
-			        }
-			        	new asyncTask(MainActivity.this).execute();	
+				
+			        	double compare = Imgproc.compareHist(hist1, hist2, Imgproc.CV_COMP_CORREL);
+			        	if(compare<1 && compare>0.9) {
+			        		Toast.makeText(MainActivity.this, "Images may be possible duplicates, verifying", Toast.LENGTH_LONG).show();
+			        		new asyncTask(MainActivity.this).execute();
+			        	}
+			        	else if(compare==1)
+			        		Toast.makeText(MainActivity.this, "Images are exact duplicates", Toast.LENGTH_LONG).show();
+			        	else
+			        		Toast.makeText(MainActivity.this, "Images are not duplicates", Toast.LENGTH_LONG).show();
+			        		
 					startTime = System.currentTimeMillis();
 				} else
 					Toast.makeText(MainActivity.this,
