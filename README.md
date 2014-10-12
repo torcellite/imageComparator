@@ -21,10 +21,10 @@ It is used in my application [WhatsAppDuplicateMediaRemover] (http://play.google
 
 # Screenshots
 
-![Screenshot](http://github.com/torcellite/imageComparator/raw/master/screenshot.png)
-![Screenshot](http://github.com/torcellite/imageComparator/raw/master/screenshot1.png)
-![Screenshot](http://github.com/torcellite/imageComparator/raw/master/screenshot2.png)
-![Screenshot](http://github.com/torcellite/imageComparator/raw/master/screenshot3.png)
+![Screenshot](screenshot.png)
+![Screenshot](screenshot1.png)
+![Screenshot](screenshot2.png)
+![Screenshot](screenshot3.png)
 # License
 
 You have all rights to use this project, but please feel obligated to give due credit.
